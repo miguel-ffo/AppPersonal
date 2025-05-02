@@ -135,5 +135,29 @@ class LoginSerializer(serializers.ModelSerializer):
 
         }
 
+class AlterarSenhaSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    senha_atual = serializers.CharField(write_only=True)
+    nova_senha = serializers.CharField(write_only=True, min_length=8)
+    confirmar_senha = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, data):
+        email = data.get('email')
+        senha_atual = data.get('senha_atual')
+        nova_senha = data.get('nova_senha')
+        confirmar_senha = data.get('confirmar_senha')
+
+        user = authenticate(username=email, password=senha_atual)
+        
+        if nova_senha != confirmar_senha:
+            raise AuthenticationFailed("As senhas devem ser iguais.")
+
+        if not user:
+            raise AuthenticationFailed("Email ou senha inválidos.")
+
+        if not user.is_active:
+            raise AuthenticationFailed("Usuário inativo")
+
+        return data
 
 
